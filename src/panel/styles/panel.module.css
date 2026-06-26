@@ -1,0 +1,205 @@
+.appShell {
+  overflow: hidden;
+}
+
+.header {
+  height: 100%;
+  padding: 0 var(--mantine-spacing-sm);
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.logoGroup {
+  gap: var(--mantine-spacing-xs);
+  margin-right: var(--mantine-spacing-sm);
+}
+
+.logoText {
+  letter-spacing: -0.3px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.searchInput {
+  width: 200px;
+  transition: width 150ms ease;
+}
+
+.searchInput:focus {
+  width: 240px !important;
+}
+
+.clearBtn:hover {
+  background-color: var(--mantine-color-red-light);
+}
+
+.sidebarHeader {
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.sidebarScroll {
+  flex: 1;
+}
+
+.keyItem {
+  width: 100%;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-left: 2px solid transparent;
+  background-color: transparent;
+  transition: background-color 150ms ease;
+}
+
+.keyItemInner {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+
+.keyItem:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.keyItem[data-selected="true"] {
+  background-color: var(--mantine-color-blue-light);
+  border-left-color: var(--mantine-color-blue-filled);
+}
+
+.keyBadge {
+  flex-shrink: 0;
+  width: 24px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.keyNameText {
+  flex: 1;
+}
+
+.deleteIcon {
+  opacity: 0.4;
+  transition: opacity 150ms ease;
+}
+
+.keyItem:hover .deleteIcon,
+.keyItem[data-selected="true"] .deleteIcon {
+  opacity: 1;
+}
+
+.mainArea {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyStateContainer {
+  height: 100%;
+  flex: 1;
+}
+
+.emptyStateStack {
+  gap: var(--mantine-spacing-xs);
+}
+
+.emptyStateIcon {
+  opacity: 0.3;
+}
+
+.emptyStateText {
+  max-width: 240px;
+}
+
+.topbar {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  min-height: 40px;
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.topbarTitle {
+  flex: 1;
+}
+
+.topbarActions {
+  gap: var(--mantine-spacing-xs);
+}
+
+.contentArea {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editSplit {
+  height: 100%;
+  width: 100%;
+}
+
+.previewPane {
+  width: 40%;
+  padding: var(--mantine-spacing-sm);
+  background-color: var(--mantine-color-dark-8);
+  border-right: 1px solid var(--mantine-color-default-border);
+}
+
+.previewLabel {
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.editorPane {
+  flex: 1;
+  flex-direction: column;
+  padding: var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-xs);
+}
+
+.readOnlyArea {
+  height: 100%;
+  padding: var(--mantine-spacing-md);
+}
+
+.textareaRoot {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.textareaWrapper {
+  flex: 1;
+}
+
+.textareaInput {
+  height: 100%;
+  font-family: var(--mantine-font-family-monospace);
+  resize: none;
+}
+
+.jsonPlaceholder {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.newKeyBar {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  background-color: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.newKeyInput {
+  width: 160px;
+}
+
+.newValInput {
+  flex: 1;
+}
