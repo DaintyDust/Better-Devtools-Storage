@@ -1,28 +1,39 @@
 import React from "react";
-import { createTheme, MantineProvider } from "@mantine/core";
+import { createTheme, MantineProvider, SegmentedControl, Tooltip, ActionIcon, Splitter } from "@mantine/core";
 import "@mantine/core/styles.css";
-import "@mantine/core/styles/baseline.css";
-import "@mantine/core/styles/default-css-variables.css";
-import "@mantine/core/styles/global.css";
 import "@mantine/notifications/styles.css";
+import ActionIconStyles from "./ActionIcon.module.css";
+import SplitterStyles from "./Splitter.module.css";
 
 const mantineTheme = createTheme({
+  primaryColor: "indigo",
   cursorType: "pointer",
   defaultRadius: "md",
+  components: {
+    SegmentedControl: SegmentedControl.extend({
+      defaultProps: { color: "indigo", radius: "md" },
+    }),
+    Tooltip: Tooltip.extend({
+      defaultProps: {
+        transitionProps: { transition: "pop", duration: 200 },
+        arrowSize: 8,
+        withArrow: true,
+        color: "indigo",
+      },
+    }),
+    ActionIcon: ActionIcon.extend({
+      defaultProps: { color: "indigo", variant: "filled" },
+      classNames: { root: ActionIconStyles.root },
+    }),
+    Splitter: Splitter.extend({
+      classNames: { handle: SplitterStyles.handle, thumb: SplitterStyles.thumb },
+    }),
+  },
 });
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<"dark" | "light">("dark");
-
-  React.useEffect(() => {
-    function updateTheme() {
-      setTheme("dark");
-    }
-    updateTheme();
-  }, [setTheme]);
-
   return (
-    <MantineProvider theme={mantineTheme} classNamesPrefix="bds-" forceColorScheme={theme} withGlobalClasses={false}>
+    <MantineProvider defaultColorScheme="auto" theme={mantineTheme} classNamesPrefix="bds-">
       <main>{children}</main>
     </MantineProvider>
   );

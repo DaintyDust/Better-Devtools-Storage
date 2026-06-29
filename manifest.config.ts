@@ -7,6 +7,7 @@ export default {
   description: "A powerful DevTools panel for inspecting and editing localStorage, sessionStorage, and chrome.storage.local.",
 
   host_permissions: ["<all_urls>"],
+  permissions: ["storage", "cookies"],
   devtools_page: "src/devtools/devtools.html",
 
   content_scripts: [

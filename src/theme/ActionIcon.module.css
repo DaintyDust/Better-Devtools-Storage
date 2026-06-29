@@ -1,0 +1,6 @@
+.root:not(:hover) {
+  background-color: transparent;
+}
+/* .root:hover {
+  background-color: var(--ai-bg-hover, var(--mantine-primary-color-filled));
+} */

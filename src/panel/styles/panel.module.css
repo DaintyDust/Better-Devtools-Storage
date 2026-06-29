@@ -12,7 +12,7 @@
 
 .logoGroup {
   gap: var(--mantine-spacing-xs);
-  margin-right: var(--mantine-spacing-sm);
+  width: calc(220px - (var(--mantine-spacing-sm)));
 }
 
 .logoText {
@@ -41,6 +41,8 @@
   align-items: center;
   padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
   border-bottom: 1px solid var(--mantine-color-default-border);
+  min-height: 40px;
+  height: 50px;
 }
 
 .sidebarScroll {
@@ -61,12 +63,12 @@
 }
 
 .keyItem:hover {
-  background-color: var(--mantine-color-default-hover);
+  background-color: var(--mantine-color-indigo-5); /* var(--mantine-color-default-hover);*/
 }
 
 .keyItem[data-selected="true"] {
-  background-color: var(--mantine-color-blue-light);
-  border-left-color: var(--mantine-color-blue-filled);
+    background-color: var(--mantine-color-indigo-8);
+    border-left-color: var(--mantine-color-indigo-outline);
 }
 
 .keyBadge {
@@ -102,15 +104,11 @@
   flex: 1;
 }
 
-.emptyStateStack {
-  gap: var(--mantine-spacing-xs);
-}
-
 .emptyStateIcon {
   opacity: 0.3;
 }
 
-.emptyStateText {
+.emptyStateDescription {
   max-width: 240px;
 }
 
@@ -119,6 +117,7 @@
   gap: var(--mantine-spacing-sm);
   padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
   min-height: 40px;
+  height: 50px;
   background-color: var(--mantine-color-body);
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
