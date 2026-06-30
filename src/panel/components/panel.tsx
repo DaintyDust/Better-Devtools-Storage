@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell, Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Badge, ScrollArea, Box, Flex, Button, Center, Textarea, UnstyledButton, Splitter, EmptyState } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { IconSearch, IconPlus, IconRefresh, IconDatabaseX, IconEdit, IconTrash, IconDatabase } from "@tabler/icons-react";
-import { fetchStorage, deleteStorageKey, clearStorage, type StorageSource, type KeyType, type StorageKey } from "../services/storage";
+import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
+import { type StorageSource, type KeyType, type StorageKey } from "../services/storage";
 import ThemeProvider from "@theme/ThemeProvider.tsx";
 import styles from "../styles/panel.module.css";
 
@@ -37,6 +39,8 @@ function Panel() {
   const [editValue, setEditValue] = useState("");
   const [newKeyName, setNewKeyName] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [isJson, setIsJson] = useState(false);
+  const [lastValidJson, setLastValidJson] = useState<string | null>(null);
 
   const loadStorage = useCallback(async () => {
     try {
@@ -56,6 +60,39 @@ function Panel() {
     loadStorage();
   }, [loadStorage]);
 
+  const isValidJson = useMemo(() => {
+    try {
+      const parsed = JSON.parse(editValue);
+      return typeof parsed === "object" && parsed !== null;
+    } catch {
+      return false;
+    }
+  }, [editValue]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      // eslint-disable-next-line
+      setIsJson(false);
+      setLastValidJson(null);
+    } else {
+      const trimmed = editValue.trim();
+      if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+        setIsJson(false);
+        setLastValidJson(null);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(editValue);
+        if (typeof parsed === "object" && parsed !== null) {
+          setIsJson(true);
+          setLastValidJson(JSON.stringify(parsed, null, 2));
+        }
+      } catch {
+        // Ignore JSON parsing errors
+      }
+    }
+  }, [editValue, isEditing]);
+
   const keys = useMemo<StorageKey[]>(() => {
     return Object.entries(storage)
       .map(([name, value]) => ({
@@ -74,6 +111,78 @@ function Panel() {
     setIsAddingMode(false);
   };
 
+  const handleSave = async () => {
+    if (!selectedKey) return;
+    try {
+      let valueToSave = editValue;
+
+      try {
+        const parsed = JSON.parse(editValue);
+        if (typeof parsed === "object" && parsed !== null) {
+          valueToSave = JSON.stringify(parsed, null, 2);
+        }
+      } catch {
+        // Fallback to saving raw string if it's not valid JSON
+      }
+      await saveStorageKey(activeSource, selectedKey.name, valueToSave);
+      notifications.show({
+        title: "Success",
+        message: `Successfully saved key "${selectedKey.name}"`,
+        color: "green",
+      });
+      setIsEditing(false);
+      await loadStorage();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      notifications.show({
+        title: "Error",
+        message: `Failed to save "${selectedKey.name}": ${errorMessage}`,
+        color: "red",
+      });
+      console.error(err);
+    }
+  };
+
+  const handleAddKey = async () => {
+    if (!newKeyName.trim()) {
+      notifications.show({
+        title: "Validation Error",
+        message: "Key name cannot be empty.",
+        color: "orange",
+      });
+      return;
+    }
+    try {
+      let valueToSave = newValue;
+
+      try {
+        const parsed = JSON.parse(newValue);
+        if (typeof parsed === "object" && parsed !== null) {
+          valueToSave = JSON.stringify(parsed, null, 2);
+        }
+      } catch {
+        // Fallback to saving raw string if it's not valid JSON
+      }
+      await saveStorageKey(activeSource, newKeyName, valueToSave);
+      notifications.show({
+        title: "Success",
+        message: `Successfully added key "${newKeyName}"`,
+        color: "green",
+      });
+      setIsAddingMode(false);
+      setNewKeyName("");
+      setNewValue("");
+      await loadStorage();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      notifications.show({
+        title: "Error",
+        message: `Failed to add key "${newKeyName}": ${errorMessage}`,
+        color: "red",
+      });
+      console.error(err);
+    }
+  };
   const handleDelete = async (keyName: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     try {
@@ -273,7 +382,9 @@ function Panel() {
                           <Button variant="default" size="xs" onClick={() => setIsEditing(false)}>
                             Cancel
                           </Button>
-                          <Button size="xs">Save</Button>
+                          <Button size="xs" onClick={handleSave}>
+                            Save
+                          </Button>
                         </>
                       ) : (
                         <>
@@ -291,14 +402,26 @@ function Panel() {
                   <Box className={styles.contentArea}>
                     {isEditing ? (
                       <Flex className={styles.editSplit}>
-                        <Box className={styles.previewPane}>
-                          <Text size="xs" fw={600} tt="uppercase" lts={0.7} c="dimmed" className={styles.previewLabel}>
-                            Live Preview
-                          </Text>
-                          <Box ff="monospace" size="sm" c="dimmed">
-                            {"{ ... }"}
+                        {isJson && (
+                          <Box className={styles.previewPane}>
+                            <Flex justify="space-between" align="center" className={styles.previewLabel} mb="xs">
+                              <Text size="xs" fw={600} tt="uppercase" lts={0.7} c="dimmed">
+                                Live Preview
+                              </Text>
+                              {!isValidJson && (
+                                <Badge size="xs" color="orange" variant="light">
+                                  Invalid JSON
+                                </Badge>
+                              )}
+                            </Flex>
+
+                            <ScrollArea style={{ flex: 1 }} className={styles.previewScroll}>
+                              <Text ff="monospace" size="sm" className={styles.previewText} style={{ opacity: isValidJson ? 1 : 0.55 }}>
+                                {lastValidJson || "Invalid JSON"}
+                              </Text>
+                            </ScrollArea>
                           </Box>
-                        </Box>
+                        )}
 
                         <Flex className={styles.editorPane}>
                           <Textarea
@@ -328,7 +451,7 @@ function Panel() {
                 <Flex className={styles.newKeyBar}>
                   <TextInput placeholder="Key name…" size="xs" value={newKeyName} onChange={(e) => setNewKeyName(e.currentTarget.value)} className={styles.newKeyInput} />
                   <TextInput placeholder="Value (string or JSON)…" size="xs" value={newValue} onChange={(e) => setNewValue(e.currentTarget.value)} className={styles.newValInput} />
-                  <Button size="xs" variant="filled">
+                  <Button size="xs" variant="filled" onClick={handleAddKey}>
                     Add
                   </Button>
                   <Button size="xs" variant="default" onClick={() => setIsAddingMode(false)}>
