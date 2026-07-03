@@ -18,10 +18,6 @@ export default {
     },
   ],
 
-  background: {
-    service_worker: "src/background/serviceworker.ts",
-  },
-
   icons: {
     16: "icons/icon16.png",
     48: "icons/icon48.png",

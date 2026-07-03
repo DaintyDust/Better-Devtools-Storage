@@ -1,6 +1,7 @@
 import React from "react";
 import { createTheme, MantineProvider, SegmentedControl, Tooltip, ActionIcon, Splitter } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import ActionIconStyles from "./ActionIcon.module.css";
@@ -37,7 +38,9 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   return (
     <MantineProvider defaultColorScheme="auto" theme={mantineTheme} classNamesPrefix="bds-">
       <Notifications position="bottom-right" />
-      <main>{children}</main>
+      <ModalsProvider>
+        <main>{children}</main>
+      </ModalsProvider>
     </MantineProvider>
   );
 }

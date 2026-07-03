@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AppShell, Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Badge, ScrollArea, Box, Flex, Button, Center, Textarea, UnstyledButton, Splitter, EmptyState } from "@mantine/core";
+import { AppShell, Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Badge, ScrollArea, Box, Flex, Button, Center, Textarea, UnstyledButton, Splitter, EmptyState, CloseButton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { modals } from "@mantine/modals";
 import { IconSearch, IconPlus, IconRefresh, IconDatabaseX, IconEdit, IconTrash, IconDatabase } from "@tabler/icons-react";
 import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
 import { type StorageSource, type KeyType, type StorageKey } from "../services/storage";
@@ -41,17 +42,22 @@ function Panel() {
   const [newValue, setNewValue] = useState("");
   const [isJson, setIsJson] = useState(false);
   const [lastValidJson, setLastValidJson] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const sourceIndex = ["localStorage", "sessionStorage", "cookies"].indexOf(activeSource);
 
   const loadStorage = useCallback(async () => {
+    setIsRefreshing(true);
     try {
       const data = await fetchStorage(activeSource);
-
       setStorage(data as Record<string, string>);
-
       setSelectedKey((prev) => (prev && !(prev.name in data) ? null : prev));
     } catch (err) {
       console.error(err);
       setStorage({});
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 600);
     }
   }, [activeSource]);
 
@@ -59,6 +65,19 @@ function Panel() {
     // eslint-disable-next-line
     loadStorage();
   }, [loadStorage]);
+
+  useEffect(() => {
+    if (activeSource === "cookies") {
+      const handleCookieChange = () => {
+        loadStorage();
+      };
+
+      chrome.cookies.onChanged.addListener(handleCookieChange);
+      return () => {
+        chrome.cookies.onChanged.removeListener(handleCookieChange);
+      };
+    }
+  }, [activeSource, loadStorage]);
 
   const isValidJson = useMemo(() => {
     try {
@@ -105,10 +124,15 @@ function Panel() {
 
   const filteredKeys = keys.filter((k) => k.name.toLowerCase().includes(searchQuery.toLowerCase()) || k.value.toLowerCase().includes(searchQuery.toLowerCase()));
   const handleSelectKey = (key: StorageKey) => {
-    setSelectedKey(key);
-    setEditValue(storage[key.name] ?? "");
-    setIsEditing(false);
-    setIsAddingMode(false);
+    if (selectedKey?.name === key.name) {
+      setSelectedKey(null);
+      setIsEditing(false);
+    } else {
+      setSelectedKey(key);
+      setEditValue(storage[key.name] ?? "");
+      setIsEditing(false);
+      setIsAddingMode(false);
+    }
   };
 
   const handleSave = async () => {
@@ -198,6 +222,26 @@ function Panel() {
     }
   };
 
+  const handleClearAll = async () => {
+    try {
+      await clearStorage(activeSource);
+      setSelectedKey(null);
+      await loadStorage();
+      notifications.show({
+        title: "Success",
+        message: `Successfully cleared all keys in ${activeSource}`,
+        color: "green",
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      notifications.show({
+        title: "Error",
+        message: `Failed to clear storage ${activeSource}: ${errorMessage}`,
+        color: "red",
+      });
+    }
+  };
+
   const getKeyColor = (type: KeyType) => {
     switch (type) {
       case "json":
@@ -252,12 +296,20 @@ function Panel() {
             />
 
             <Box className={styles.spacer} />
-            <TextInput placeholder="Filter keys…" size="xs" leftSection={<IconSearch size={14} />} value={searchQuery} onChange={(e) => setSearchQuery(e.currentTarget.value)} classNames={{ input: styles.searchInput }} />
+            <TextInput
+              placeholder="Filter keys…"
+              size="xs"
+              leftSection={<IconSearch size={14} />}
+              rightSection={searchQuery && <CloseButton size="xs" onClick={() => setSearchQuery("")} style={{ cursor: "pointer" }} />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              classNames={{ input: styles.searchInput }}
+            />
             <Tooltip label="Add new key">
               <ActionIcon
                 onClick={() => {
-                  setIsAddingMode(true);
-                  setSelectedKey(null);
+                  setIsAddingMode((prev) => !prev);
+                  // setSelectedKey(null);
                   setIsEditing(false);
                 }}
               >
@@ -267,7 +319,7 @@ function Panel() {
 
             <Tooltip label="Refresh">
               <ActionIcon onClick={loadStorage}>
-                <IconRefresh size={16} />
+                <IconRefresh size={16} className={isRefreshing ? styles.spinning : undefined} />
               </ActionIcon>
             </Tooltip>
 
@@ -275,10 +327,26 @@ function Panel() {
               <ActionIcon
                 color="red"
                 className={styles.clearBtn}
-                onClick={async () => {
-                  await clearStorage(activeSource);
-                  setSelectedKey(null);
-                  loadStorage();
+                onClick={() => {
+                  modals.openConfirmModal({
+                    title: "Clear all keys",
+                    centered: true,
+                    children: (
+                      <Text size="sm">
+                        Are you sure you want to delete all keys in <strong>{activeSource}</strong>? This action cannot be undone.
+                      </Text>
+                    ),
+                    labels: { confirm: "Clear keys", cancel: "Cancel" },
+                    confirmProps: { color: "red" },
+                    onConfirm: handleClearAll,
+                    onCancel: () => {
+                      notifications.show({
+                        title: "Cancelled",
+                        message: "Clear all keys action was cancelled.",
+                        color: "gray",
+                      });
+                    },
+                  });
                 }}
               >
                 <IconDatabaseX size={16} />
@@ -289,70 +357,89 @@ function Panel() {
         <AppShell.Main>
           <Splitter style={{ height: "calc(100vh - 44px)" }}>
             <Splitter.Pane defaultSize={20} min={15} max={45} style={{ display: "flex", flexDirection: "column" }}>
-              <Flex className={styles.sidebarHeader}>
-                <Text size="xs" fw={600} tt="uppercase" lts={0.8} c="dimmed">
-                  Keys
-                </Text>
-                <Badge size="sm" radius="xl">
-                  {filteredKeys.length}
-                </Badge>
-              </Flex>
+              <div className={styles.carouselViewport}>
+                <div className={styles.carouselTrack} style={{ transform: `translateX(-${sourceIndex * 33.3333}%)` }}>
+                  {(["localStorage", "sessionStorage", "cookies"] as StorageSource[]).map((source) => (
+                    <div key={source} className={styles.carouselSlide}>
+                      {source === activeSource ? (
+                        <>
+                          <Flex className={styles.sidebarHeader}>
+                            <Text size="xs" fw={600} tt="uppercase" lts={0.8} c="dimmed">
+                              Keys
+                            </Text>
+                            <Badge size="sm" radius="xl">
+                              {filteredKeys.length}
+                            </Badge>
+                          </Flex>
 
-              {/* {filteredKeys.length === 0 ? (
-                  <Text size="xs" c="dimmed" ta="center" py="xl">
-                  No keys found
-                  </Text>
-                  ) : ( */}
-              {keys.length === 0 ? (
-                <Center className={styles.emptyStateContainer}>
-                  <EmptyState size="xs" icon={<IconDatabase size={32} stroke={1.2} className={styles.emptyStateIcon} />} title="Storage is empty" align="center" withIndicatorBackground={false} p="md">
-                    <EmptyState.Description className={styles.emptyStateDescription}>No keys found in this storage source.</EmptyState.Description>
-                  </EmptyState>
-                </Center>
-              ) : filteredKeys.length === 0 ? (
-                <Center className={styles.emptyStateContainer}>
-                  <EmptyState size="xs" icon={<IconDatabaseX size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="No matching keys" align="center" withIndicatorBackground={false}>
-                    <EmptyState.Description className={styles.emptyStateDescription}>Try adjusting your search query or clear it.</EmptyState.Description>
-                    <EmptyState.Actions>
-                      <Button size="xs" variant="default" onClick={() => setSearchQuery("")}>
-                        Clear Search
-                      </Button>
-                    </EmptyState.Actions>
-                  </EmptyState>
-                </Center>
-              ) : (
-                <ScrollArea className={styles.sidebarScroll} type="hover" style={{ flex: 1 }}>
-                  {filteredKeys.map((item) => (
-                    <UnstyledButton component="div" key={item.name} className={styles.keyItem} data-selected={selectedKey?.name === item.name} onClick={() => handleSelectKey(item)}>
-                      <Flex className={styles.keyItemInner}>
-                        <Badge size="sm" variant="light" color={getKeyColor(item.type)} radius="sm" className={styles.keyBadge}>
-                          {getKeyAbbr(item.type)}
-                        </Badge>
+                          {keys.length === 0 ? (
+                            <Center className={styles.emptyStateContainer}>
+                              <EmptyState size="xs" icon={<IconDatabase size={32} stroke={1.2} className={styles.emptyStateIcon} />} title="Storage is empty" align="center" withIndicatorBackground={false} p="md">
+                                <EmptyState.Description className={styles.emptyStateDescription}>No keys found in this storage source.</EmptyState.Description>
+                              </EmptyState>
+                            </Center>
+                          ) : filteredKeys.length === 0 ? (
+                            <Center className={styles.emptyStateContainer}>
+                              <EmptyState size="xs" icon={<IconDatabaseX size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="No matching keys" align="center" withIndicatorBackground={false}>
+                                <EmptyState.Description className={styles.emptyStateDescription}>Try adjusting your search query or clear it.</EmptyState.Description>
+                                <EmptyState.Actions>
+                                  <Button size="xs" variant="default" onClick={() => setSearchQuery("")}>
+                                    Clear Search
+                                  </Button>
+                                </EmptyState.Actions>
+                              </EmptyState>
+                            </Center>
+                          ) : (
+                            <ScrollArea className={styles.sidebarScroll} type="hover" style={{ flex: 1 }}>
+                              {filteredKeys.map((item) => (
+                                <UnstyledButton component="div" key={item.name} className={styles.keyItem} data-selected={selectedKey?.name === item.name} onClick={() => handleSelectKey(item)}>
+                                  <Flex className={styles.keyItemInner}>
+                                    <Badge size="sm" variant="light" color={getKeyColor(item.type)} radius="sm" className={styles.keyBadge}>
+                                      {getKeyAbbr(item.type)}
+                                    </Badge>
 
-                        <Text size="sm" truncate className={styles.keyNameText} fw={selectedKey?.name === item.name ? 500 : 400}>
-                          {item.name}
-                        </Text>
+                                    <Text size="sm" truncate className={styles.keyNameText} fw={selectedKey?.name === item.name ? 500 : 400}>
+                                      {item.name}
+                                    </Text>
 
-                        <ActionIcon size="sm" variant="subtle" color="red" onClick={(e) => handleDelete(item.name, e)} className={styles.deleteIcon}>
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Flex>
-                    </UnstyledButton>
+                                    <ActionIcon size="sm" variant="subtle" color="red" onClick={(e) => handleDelete(item.name, e)} className={styles.deleteIcon}>
+                                      <IconTrash size={14} />
+                                    </ActionIcon>
+                                  </Flex>
+                                </UnstyledButton>
+                              ))}
+                            </ScrollArea>
+                          )}
+                        </>
+                      ) : (
+                        <div />
+                      )}
+                    </div>
                   ))}
-                </ScrollArea>
-              )}
+                </div>
+              </div>
             </Splitter.Pane>
             <Splitter.Pane className={styles.mainArea} defaultSize={80} min={55} max={85} style={{ display: "flex", flexDirection: "column" }}>
-              {!selectedKey && !isAddingMode && (
+              <Flex className={`${styles.newKeyBar} ${isAddingMode ? styles.newKeyBarActive : ""}`}>
+                <TextInput placeholder="Key name…" size="xs" value={newKeyName} onChange={(e) => setNewKeyName(e.currentTarget.value)} className={styles.newKeyInput} />
+                <TextInput placeholder="Value (string or JSON)…" size="xs" value={newValue} onChange={(e) => setNewValue(e.currentTarget.value)} className={styles.newValInput} />
+                <Button size="xs" variant="filled" onClick={handleAddKey}>
+                  Add
+                </Button>
+                <Button size="xs" variant="default" onClick={() => setIsAddingMode(false)}>
+                  Cancel
+                </Button>
+              </Flex>
+              {/* )} */}
+
+              {!selectedKey ? (
                 <Center className={styles.emptyStateContainer}>
                   <EmptyState size="sm" icon={<IconDatabase size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="No Key Selected" align="center" withIndicatorBackground={false}>
                     <EmptyState.Description className={styles.emptyStateDescription}>Select a key from the sidebar list to inspect, edit, or delete its value.</EmptyState.Description>
                   </EmptyState>
                 </Center>
-              )}
-
-              {selectedKey && (
-                <>
+              ) : (
+                <Flex direction="column" style={{ flex: 1, overflow: "hidden" }}>
                   <Flex className={styles.topbar}>
                     {isEditing ? (
                       <Text size="xs" c="dimmed" className={styles.topbarTitle}>
@@ -367,7 +454,7 @@ function Panel() {
                       </Text>
                     ) : (
                       <>
-                        <Text ff="monospace" size="sm" fw={600} c="indigo" truncate className={styles.topbarTitle}>
+                        <Text key={selectedKey.name} ff="monospace" size="sm" fw={600} c="indigo" truncate className={`${styles.topbarTitle} ${styles.slideIn}`}>
                           {selectedKey.name}
                         </Text>
                         <Badge size="sm" variant="light" color="gray" radius="xl" tt="lowercase">
@@ -401,7 +488,7 @@ function Panel() {
 
                   <Box className={styles.contentArea}>
                     {isEditing ? (
-                      <Flex className={styles.editSplit}>
+                      <Flex key={selectedKey.name} className={`${styles.editSplit} ${styles.slideIn}`}>
                         {isJson && (
                           <Box className={styles.previewPane}>
                             <Flex justify="space-between" align="center" className={styles.previewLabel} mb="xs">
@@ -416,7 +503,7 @@ function Panel() {
                             </Flex>
 
                             <ScrollArea style={{ flex: 1 }} className={styles.previewScroll}>
-                              <Text ff="monospace" size="sm" className={styles.previewText} style={{ opacity: isValidJson ? 1 : 0.55 }}>
+                              <Text ff="monospace" size="sm" className={styles.previewText} style={{ whiteSpace: "pre-wrap", opacity: isValidJson ? 1 : 0.55 }}>
                                 {lastValidJson || "Invalid JSON"}
                               </Text>
                             </ScrollArea>
@@ -437,26 +524,13 @@ function Panel() {
                         </Flex>
                       </Flex>
                     ) : (
-                      <ScrollArea className={styles.readOnlyArea}>
+                      <ScrollArea key={selectedKey.name} className={`${styles.readOnlyArea} ${styles.slideIn}`}>
                         <Text ff="monospace" style={{ whiteSpace: "pre-wrap" }}>
                           {storage[selectedKey.name] ?? ""}
                         </Text>
                       </ScrollArea>
                     )}
                   </Box>
-                </>
-              )}
-
-              {isAddingMode && (
-                <Flex className={styles.newKeyBar}>
-                  <TextInput placeholder="Key name…" size="xs" value={newKeyName} onChange={(e) => setNewKeyName(e.currentTarget.value)} className={styles.newKeyInput} />
-                  <TextInput placeholder="Value (string or JSON)…" size="xs" value={newValue} onChange={(e) => setNewValue(e.currentTarget.value)} className={styles.newValInput} />
-                  <Button size="xs" variant="filled" onClick={handleAddKey}>
-                    Add
-                  </Button>
-                  <Button size="xs" variant="default" onClick={() => setIsAddingMode(false)}>
-                    Cancel
-                  </Button>
                 </Flex>
               )}
             </Splitter.Pane>
