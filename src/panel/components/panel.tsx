@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AppShell, Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Badge, ScrollArea, Box, Flex, Button, Center, Textarea, UnstyledButton, Splitter, EmptyState, CloseButton } from "@mantine/core";
+import { AppShell, Splitter } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { modals } from "@mantine/modals";
-import { IconSearch, IconPlus, IconRefresh, IconDatabaseX, IconEdit, IconTrash, IconDatabase } from "@tabler/icons-react";
 import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
 import { type StorageSource, type KeyType, type StorageKey } from "../services/storage";
-import ThemeProvider from "@theme/ThemeProvider.tsx";
-import styles from "../styles/panel.module.css";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
+import KeyContent from "./KeyContent";
+import styles from "../styles/Panel.module.css";
 
 function detectType(value: string): KeyType {
   if (value === "true" || value === "false") {
@@ -78,15 +78,6 @@ function Panel() {
       };
     }
   }, [activeSource, loadStorage]);
-
-  const isValidJson = useMemo(() => {
-    try {
-      const parsed = JSON.parse(editValue);
-      return typeof parsed === "object" && parsed !== null;
-    } catch {
-      return false;
-    }
-  }, [editValue]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -242,302 +233,62 @@ function Panel() {
     }
   };
 
-  const getKeyColor = (type: KeyType) => {
-    switch (type) {
-      case "json":
-        return "blue";
-      case "string":
-        return "green";
-      case "number":
-        return "orange";
-      case "boolean":
-        return "red";
-      default:
-        return "gray";
-    }
-  };
-
-  const getKeyAbbr = (type: KeyType) => {
-    switch (type) {
-      case "json":
-        return "{ }";
-      case "string":
-        return '" "';
-      case "number":
-        return "123";
-      case "boolean":
-        return "tf";
-      default:
-        return "??";
-    }
-  };
-
   return (
-    <ThemeProvider>
-      <AppShell className={styles.appShell} header={{ height: 44 }} padding="0">
-        <AppShell.Header>
-          <Flex className={styles.header}>
-            <Group className={styles.logoGroup}>
-              <img src="/icons/icon16.png" alt="Better Devtools Storage Logo" width={16} height={16} />
-              <Text fw={700} size="sm" c="indigo" className={styles.logoText}>
-                Better Devtools Storage
-              </Text>
-            </Group>
-
-            <SegmentedControl
-              size="xs"
-              data={[
-                { label: "localStorage", value: "localStorage" },
-                { label: "sessionStorage", value: "sessionStorage" },
-                { label: "Cookies", value: "cookies" },
-              ]}
-              value={activeSource}
-              onChange={(value) => setActiveSource(value as StorageSource)}
+    <AppShell className={styles.appShell} header={{ height: 44 }} padding="0">
+      <AppShell.Header>
+        <Header
+          activeSource={activeSource}
+          onSourceChange={setActiveSource}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onAddClick={() => {
+            setIsAddingMode((prev) => !prev);
+            setIsEditing(false);
+          }}
+          onRefresh={loadStorage}
+          onClearAll={handleClearAll}
+          isRefreshing={isRefreshing}
+        />
+      </AppShell.Header>
+      <AppShell.Main>
+        <Splitter className={styles.splitter}>
+          <Splitter.Pane className={styles.splitterPane} defaultSize={20} min={15} max={45}>
+            <Sidebar
+              keys={keys}
+              filteredKeys={filteredKeys}
+              selectedKey={selectedKey}
+              onSelectKey={handleSelectKey}
+              onDeleteKey={handleDelete}
+              onClearSearch={() => setSearchQuery("")}
+              sourceIndex={sourceIndex}
+              activeSource={activeSource}
             />
-
-            <Box className={styles.spacer} />
-            <TextInput
-              placeholder="Filter keys…"
-              size="xs"
-              leftSection={<IconSearch size={14} />}
-              rightSection={searchQuery && <CloseButton size="xs" onClick={() => setSearchQuery("")} style={{ cursor: "pointer" }} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              classNames={{ input: styles.searchInput }}
+          </Splitter.Pane>
+          <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={80} min={55} max={85}>
+            <KeyContent
+              activeSource={activeSource}
+              selectedKey={selectedKey}
+              storage={storage}
+              isEditing={isEditing}
+              onSetEditing={setIsEditing}
+              editValue={editValue}
+              onEditValueChange={setEditValue}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              isAddingMode={isAddingMode}
+              onSetAddingMode={setIsAddingMode}
+              newKeyName={newKeyName}
+              onNewKeyNameChange={setNewKeyName}
+              newValue={newValue}
+              onNewValueChange={setNewValue}
+              onAddKey={handleAddKey}
+              isJson={isJson}
+              lastValidJson={lastValidJson}
             />
-            <Tooltip label="Add new key">
-              <ActionIcon
-                onClick={() => {
-                  setIsAddingMode((prev) => !prev);
-                  // setSelectedKey(null);
-                  setIsEditing(false);
-                }}
-              >
-                <IconPlus size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            <Tooltip label="Refresh">
-              <ActionIcon onClick={loadStorage}>
-                <IconRefresh size={16} className={isRefreshing ? styles.spinning : undefined} />
-              </ActionIcon>
-            </Tooltip>
-
-            <Tooltip label="Clear all keys">
-              <ActionIcon
-                color="red"
-                className={styles.clearBtn}
-                onClick={() => {
-                  modals.openConfirmModal({
-                    title: "Clear all keys",
-                    centered: true,
-                    children: (
-                      <Text size="sm">
-                        Are you sure you want to delete all keys in <strong>{activeSource}</strong>? This action cannot be undone.
-                      </Text>
-                    ),
-                    labels: { confirm: "Clear keys", cancel: "Cancel" },
-                    confirmProps: { color: "red" },
-                    onConfirm: handleClearAll,
-                    onCancel: () => {
-                      notifications.show({
-                        title: "Cancelled",
-                        message: "Clear all keys action was cancelled.",
-                        color: "gray",
-                      });
-                    },
-                  });
-                }}
-              >
-                <IconDatabaseX size={16} />
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-        </AppShell.Header>
-        <AppShell.Main>
-          <Splitter style={{ height: "calc(100vh - 44px)" }}>
-            <Splitter.Pane defaultSize={20} min={15} max={45} style={{ display: "flex", flexDirection: "column" }}>
-              <div className={styles.carouselViewport}>
-                <div className={styles.carouselTrack} style={{ transform: `translateX(-${sourceIndex * 33.3333}%)` }}>
-                  {(["localStorage", "sessionStorage", "cookies"] as StorageSource[]).map((source) => (
-                    <div key={source} className={styles.carouselSlide}>
-                      {source === activeSource ? (
-                        <>
-                          <Flex className={styles.sidebarHeader}>
-                            <Text size="xs" fw={600} tt="uppercase" lts={0.8} c="dimmed">
-                              Keys
-                            </Text>
-                            <Badge size="sm" radius="xl">
-                              {filteredKeys.length}
-                            </Badge>
-                          </Flex>
-
-                          {keys.length === 0 ? (
-                            <Center className={styles.emptyStateContainer}>
-                              <EmptyState size="xs" icon={<IconDatabase size={32} stroke={1.2} className={styles.emptyStateIcon} />} title="Storage is empty" align="center" withIndicatorBackground={false} p="md">
-                                <EmptyState.Description className={styles.emptyStateDescription}>No keys found in this storage source.</EmptyState.Description>
-                              </EmptyState>
-                            </Center>
-                          ) : filteredKeys.length === 0 ? (
-                            <Center className={styles.emptyStateContainer}>
-                              <EmptyState size="xs" icon={<IconDatabaseX size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="No matching keys" align="center" withIndicatorBackground={false}>
-                                <EmptyState.Description className={styles.emptyStateDescription}>Try adjusting your search query or clear it.</EmptyState.Description>
-                                <EmptyState.Actions>
-                                  <Button size="xs" variant="default" onClick={() => setSearchQuery("")}>
-                                    Clear Search
-                                  </Button>
-                                </EmptyState.Actions>
-                              </EmptyState>
-                            </Center>
-                          ) : (
-                            <ScrollArea className={styles.sidebarScroll} type="hover" style={{ flex: 1 }}>
-                              {filteredKeys.map((item) => (
-                                <UnstyledButton component="div" key={item.name} className={styles.keyItem} data-selected={selectedKey?.name === item.name} onClick={() => handleSelectKey(item)}>
-                                  <Flex className={styles.keyItemInner}>
-                                    <Badge size="sm" variant="light" color={getKeyColor(item.type)} radius="sm" className={styles.keyBadge}>
-                                      {getKeyAbbr(item.type)}
-                                    </Badge>
-
-                                    <Text size="sm" truncate className={styles.keyNameText} fw={selectedKey?.name === item.name ? 500 : 400}>
-                                      {item.name}
-                                    </Text>
-
-                                    <ActionIcon size="sm" variant="subtle" color="red" onClick={(e) => handleDelete(item.name, e)} className={styles.deleteIcon}>
-                                      <IconTrash size={14} />
-                                    </ActionIcon>
-                                  </Flex>
-                                </UnstyledButton>
-                              ))}
-                            </ScrollArea>
-                          )}
-                        </>
-                      ) : (
-                        <div />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Splitter.Pane>
-            <Splitter.Pane className={styles.mainArea} defaultSize={80} min={55} max={85} style={{ display: "flex", flexDirection: "column" }}>
-              <Flex className={`${styles.newKeyBar} ${isAddingMode ? styles.newKeyBarActive : ""}`}>
-                <TextInput placeholder="Key name…" size="xs" value={newKeyName} onChange={(e) => setNewKeyName(e.currentTarget.value)} className={styles.newKeyInput} />
-                <TextInput placeholder="Value (string or JSON)…" size="xs" value={newValue} onChange={(e) => setNewValue(e.currentTarget.value)} className={styles.newValInput} />
-                <Button size="xs" variant="filled" onClick={handleAddKey}>
-                  Add
-                </Button>
-                <Button size="xs" variant="default" onClick={() => setIsAddingMode(false)}>
-                  Cancel
-                </Button>
-              </Flex>
-              {/* )} */}
-
-              {!selectedKey ? (
-                <Center className={styles.emptyStateContainer}>
-                  <EmptyState size="sm" icon={<IconDatabase size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="No Key Selected" align="center" withIndicatorBackground={false}>
-                    <EmptyState.Description className={styles.emptyStateDescription}>Select a key from the sidebar list to inspect, edit, or delete its value.</EmptyState.Description>
-                  </EmptyState>
-                </Center>
-              ) : (
-                <Flex direction="column" style={{ flex: 1, overflow: "hidden" }}>
-                  <Flex className={styles.topbar}>
-                    {isEditing ? (
-                      <Text size="xs" c="dimmed" className={styles.topbarTitle}>
-                        Editing as{" "}
-                        <Text component="strong" c="text">
-                          raw string
-                        </Text>{" "}
-                        in{" "}
-                        <Text component="strong" c="text">
-                          {activeSource}
-                        </Text>
-                      </Text>
-                    ) : (
-                      <>
-                        <Text key={selectedKey.name} ff="monospace" size="sm" fw={600} c="indigo" truncate className={`${styles.topbarTitle} ${styles.slideIn}`}>
-                          {selectedKey.name}
-                        </Text>
-                        <Badge size="sm" variant="light" color="gray" radius="xl" tt="lowercase">
-                          {selectedKey.type}
-                        </Badge>
-                      </>
-                    )}
-
-                    <Group className={styles.topbarActions}>
-                      {isEditing ? (
-                        <>
-                          <Button variant="default" size="xs" onClick={() => setIsEditing(false)}>
-                            Cancel
-                          </Button>
-                          <Button size="xs" onClick={handleSave}>
-                            Save
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="default" size="xs" leftSection={<IconEdit size={14} />} onClick={() => setIsEditing(true)}>
-                            Edit
-                          </Button>
-                          <Button variant="light" color="red" size="xs" leftSection={<IconTrash size={14} />} onClick={() => handleDelete(selectedKey.name)}>
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </Group>
-                  </Flex>
-
-                  <Box className={styles.contentArea}>
-                    {isEditing ? (
-                      <Flex key={selectedKey.name} className={`${styles.editSplit} ${styles.slideIn}`}>
-                        {isJson && (
-                          <Box className={styles.previewPane}>
-                            <Flex justify="space-between" align="center" className={styles.previewLabel} mb="xs">
-                              <Text size="xs" fw={600} tt="uppercase" lts={0.7} c="dimmed">
-                                Live Preview
-                              </Text>
-                              {!isValidJson && (
-                                <Badge size="xs" color="orange" variant="light">
-                                  Invalid JSON
-                                </Badge>
-                              )}
-                            </Flex>
-
-                            <ScrollArea style={{ flex: 1 }} className={styles.previewScroll}>
-                              <Text ff="monospace" size="sm" className={styles.previewText} style={{ whiteSpace: "pre-wrap", opacity: isValidJson ? 1 : 0.55 }}>
-                                {lastValidJson || "Invalid JSON"}
-                              </Text>
-                            </ScrollArea>
-                          </Box>
-                        )}
-
-                        <Flex className={styles.editorPane}>
-                          <Textarea
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.currentTarget.value)}
-                            classNames={{
-                              root: styles.textareaRoot,
-                              wrapper: styles.textareaWrapper,
-                              input: styles.textareaInput,
-                            }}
-                            spellCheck={false}
-                          />
-                        </Flex>
-                      </Flex>
-                    ) : (
-                      <ScrollArea key={selectedKey.name} className={`${styles.readOnlyArea} ${styles.slideIn}`}>
-                        <Text ff="monospace" style={{ whiteSpace: "pre-wrap" }}>
-                          {storage[selectedKey.name] ?? ""}
-                        </Text>
-                      </ScrollArea>
-                    )}
-                  </Box>
-                </Flex>
-              )}
-            </Splitter.Pane>
-          </Splitter>
-        </AppShell.Main>
-      </AppShell>
-    </ThemeProvider>
+          </Splitter.Pane>
+        </Splitter>
+      </AppShell.Main>
+    </AppShell>
   );
 }
 

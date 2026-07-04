@@ -1,0 +1,138 @@
+.topbar {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  min-height: 40px;
+  height: 50px;
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.topbarTitle {
+  flex: 1;
+}
+
+.topbarActions {
+  gap: var(--mantine-spacing-xs);
+}
+
+.contentArea {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editSplit {
+  height: 100%;
+  width: 100%;
+}
+
+.editorPane {
+  flex: 1;
+  flex-direction: column;
+  padding: var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-xs);
+}
+
+.previewPane {
+  width: 40%;
+  padding: var(--mantine-spacing-sm);
+  background-color: var(--mantine-color-dark-8);
+  border-right: 1px solid var(--mantine-color-default-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.previewLabel {
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.previewScroll {
+  flex: 1;
+}
+
+.previewText {
+  white-space: pre-wrap;
+}
+
+.readOnlyArea {
+  height: 100%;
+  padding: var(--mantine-spacing-md);
+}
+
+.newKeyBar {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: 0 var(--mantine-spacing-md);
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid transparent;
+  overflow: hidden;
+  max-height: 0;
+  transition:
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.newKeyBarActive {
+  max-height: 52px;
+  padding-top: var(--mantine-spacing-xs);
+  padding-bottom: var(--mantine-spacing-xs);
+  border-bottom-color: var(--mantine-color-default-border);
+}
+
+.newKeyInput {
+  width: 160px;
+}
+
+.newValInput {
+  flex: 1;
+}
+
+.emptyStateContainer {
+  height: 100%;
+  flex: 1;
+}
+
+.emptyStateIcon {
+  opacity: 0.3;
+}
+
+.emptyStateDescription {
+  max-width: 240px;
+}
+
+.textareaRoot {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.textareaWrapper {
+  flex: 1;
+}
+
+.textareaInput {
+  height: 100%;
+  font-family: var(--mantine-font-family-monospace);
+  resize: none;
+}
+
+.slideIn {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

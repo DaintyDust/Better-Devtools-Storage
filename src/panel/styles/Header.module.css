@@ -1,0 +1,46 @@
+.header {
+  height: 100%;
+  padding: 0 var(--mantine-spacing-sm);
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.logoGroup {
+  gap: var(--mantine-spacing-xs);
+  width: calc(220px - (var(--mantine-spacing-sm)));
+}
+
+.logoText {
+  letter-spacing: -0.3px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.searchInput {
+  width: 200px;
+  transition: width 150ms ease;
+}
+
+.searchInput:focus {
+  width: 240px !important;
+}
+
+.clearBtn:hover {
+  background-color: var(--mantine-color-red-light);
+}
+
+.spinning {
+  animation: spin 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
