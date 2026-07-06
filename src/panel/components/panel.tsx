@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { AppShell, Splitter } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
@@ -9,24 +9,19 @@ import KeyContent from "./KeyContent";
 import styles from "../styles/Panel.module.css";
 
 function detectType(value: string): KeyType {
-  if (value === "true" || value === "false") {
-    return "boolean";
-  }
+  if (value === "true" || value === "false") return "boolean";
+  if (value.trim() !== "" && !Number.isNaN(Number(value))) return "number";
 
-  if (value.trim() !== "" && !Number.isNaN(Number(value))) {
-    return "number";
-  }
+  const trimmed = value.trim();
+  if (trimmed.length < 2) return "string";
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return "string";
 
   try {
     const parsed = JSON.parse(value);
-
-    if (typeof parsed === "object" && parsed !== null) {
-      return "json";
-    }
+    if (typeof parsed === "object" && parsed !== null) return "json";
   } catch {
     // Ignore JSON parsing errors
   }
-
   return "string";
 }
 
@@ -43,18 +38,33 @@ function Panel() {
   const [isJson, setIsJson] = useState(false);
   const [lastValidJson, setLastValidJson] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const jsonDebounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const sourceIndex = ["localStorage", "sessionStorage", "cookies"].indexOf(activeSource);
 
   const loadStorage = useCallback(async () => {
     setIsRefreshing(true);
+    setIsLoading(true);
     try {
       const data = await fetchStorage(activeSource);
       setStorage(data as Record<string, string>);
-      setSelectedKey((prev) => (prev && !(prev.name in data) ? null : prev));
+      setSelectedKey((prev) => {
+        if (!prev) return null;
+        if (!(prev.name in data)) return null;
+        const newValue = data[prev.name];
+        if (newValue === undefined) return null;
+
+        return {
+          name: prev.name,
+          type: detectType(newValue),
+          value: newValue,
+        };
+      });
     } catch (err) {
       console.error(err);
       setStorage({});
     } finally {
+      setIsLoading(false);
       setTimeout(() => {
         setIsRefreshing(false);
       }, 600);
@@ -84,7 +94,12 @@ function Panel() {
       // eslint-disable-next-line
       setIsJson(false);
       setLastValidJson(null);
-    } else {
+      return;
+    }
+
+    if (jsonDebounceRef.current) clearTimeout(jsonDebounceRef.current);
+
+    jsonDebounceRef.current = setTimeout(() => {
       const trimmed = editValue.trim();
       if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
         setIsJson(false);
@@ -100,7 +115,11 @@ function Panel() {
       } catch {
         // Ignore JSON parsing errors
       }
-    }
+    }, 300);
+
+    return () => {
+      if (jsonDebounceRef.current) clearTimeout(jsonDebounceRef.current);
+    };
   }, [editValue, isEditing]);
 
   const keys = useMemo<StorageKey[]>(() => {
@@ -113,7 +132,7 @@ function Panel() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [storage]);
 
-  const filteredKeys = keys.filter((k) => k.name.toLowerCase().includes(searchQuery.toLowerCase()) || k.value.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredKeys = useMemo(() => keys.filter((k) => k.name.toLowerCase().includes(searchQuery.toLowerCase()) || k.value.toLowerCase().includes(searchQuery.toLowerCase())), [keys, searchQuery]);
   const handleSelectKey = (key: StorageKey) => {
     if (selectedKey?.name === key.name) {
       setSelectedKey(null);
@@ -233,6 +252,15 @@ function Panel() {
     }
   };
 
+  const handleAddClick = useCallback(() => {
+    setIsAddingMode((prev) => !prev);
+    setIsEditing(false);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
   return (
     <AppShell className={styles.appShell} header={{ height: 44 }} padding="0">
       <AppShell.Header>
@@ -241,10 +269,7 @@ function Panel() {
           onSourceChange={setActiveSource}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onAddClick={() => {
-            setIsAddingMode((prev) => !prev);
-            setIsEditing(false);
-          }}
+          onAddClick={handleAddClick}
           onRefresh={loadStorage}
           onClearAll={handleClearAll}
           isRefreshing={isRefreshing}
@@ -259,9 +284,10 @@ function Panel() {
               selectedKey={selectedKey}
               onSelectKey={handleSelectKey}
               onDeleteKey={handleDelete}
-              onClearSearch={() => setSearchQuery("")}
+              onClearSearch={handleClearSearch}
               sourceIndex={sourceIndex}
               activeSource={activeSource}
+              isLoading={isLoading}
             />
           </Splitter.Pane>
           <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={80} min={55} max={85}>
@@ -284,6 +310,7 @@ function Panel() {
               onAddKey={handleAddKey}
               isJson={isJson}
               lastValidJson={lastValidJson}
+              isLoading={isLoading}
             />
           </Splitter.Pane>
         </Splitter>

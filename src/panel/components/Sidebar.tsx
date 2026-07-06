@@ -1,4 +1,5 @@
-import { ActionIcon, Text, Badge, ScrollArea, Flex, Button, Center, UnstyledButton, EmptyState } from "@mantine/core";
+import { memo } from "react";
+import { ActionIcon, Text, Badge, ScrollArea, Flex, Button, Center, UnstyledButton, EmptyState, Stack, Skeleton } from "@mantine/core";
 import { IconDatabaseX, IconTrash, IconDatabase } from "@tabler/icons-react";
 import { type StorageSource, type KeyType, type StorageKey } from "../services/storage";
 import styles from "../styles/Sidebar.module.css";
@@ -12,9 +13,10 @@ interface SidebarProps {
   onClearSearch: () => void;
   sourceIndex: number;
   activeSource: StorageSource;
+  isLoading: boolean;
 }
 
-export default function Sidebar({ keys, filteredKeys, selectedKey, onSelectKey, onDeleteKey, onClearSearch, sourceIndex, activeSource }: SidebarProps) {
+const Sidebar = memo(function Sidebar({ keys, filteredKeys, selectedKey, onSelectKey, onDeleteKey, onClearSearch, sourceIndex, activeSource, isLoading }: SidebarProps) {
   const getKeyColor = (type: KeyType) => {
     switch (type) {
       case "json":
@@ -61,8 +63,16 @@ export default function Sidebar({ keys, filteredKeys, selectedKey, onSelectKey, 
                       {filteredKeys.length}
                     </Badge>
                   </Flex>
-
-                  {keys.length === 0 ? (
+                  {isLoading ? (
+                    <Stack gap={0} style={{ flex: 1, padding: "var(--mantine-spacing-xs) var(--mantine-spacing-sm)"}}>
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Flex key={i} align="center" gap="sm" py={6}>
+                          <Skeleton height={20} width={24} radius="sm" />
+                          <Skeleton height={14} radius="sm" style={{ flex: 1}} />
+                        </Flex>
+                      ))}
+                    </Stack>
+                  ) : keys.length === 0 ? (
                     <Center className={styles.emptyStateContainer}>
                       <EmptyState size="xs" icon={<IconDatabase size={32} stroke={1.2} className={styles.emptyStateIcon} />} title="Storage is empty" align="center" withIndicatorBackground={false} p="md">
                         <EmptyState.Description className={styles.emptyStateDescription}>No keys found in this storage source.</EmptyState.Description>
@@ -110,4 +120,6 @@ export default function Sidebar({ keys, filteredKeys, selectedKey, onSelectKey, 
       </div>
     </>
   );
-}
+});
+
+export default Sidebar;

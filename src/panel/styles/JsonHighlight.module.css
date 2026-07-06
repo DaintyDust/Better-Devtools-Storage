@@ -1,0 +1,33 @@
+pre {
+  margin: 0;
+  padding: var(--mantine-spacing-sm);
+  padding-left: 0;
+  background: transparent !important;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.container {
+  display: grid;
+  align-items: start;
+}
+
+.lineNumbers {
+  text-align: right;
+  opacity: 0.4;
+  user-select: none;
+}
+
+.text {
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  min-width: 0;
+}
+
+.textWithLineWrap {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

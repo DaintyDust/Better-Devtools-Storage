@@ -36,10 +36,10 @@
 }
 
 .previewPane {
-  width: 40%;
+  /* width: 40%; */
   padding: var(--mantine-spacing-sm);
   background-color: var(--mantine-color-dark-8);
-  border-right: 1px solid var(--mantine-color-default-border);
+  /* border-right: 1px solid var(--mantine-color-default-border); */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -55,7 +55,51 @@
 }
 
 .previewText {
+  --text-fz: var(--mantine-font-size-sm);
+  --text-lh: var(--mantine-line-height-sm);
+  opacity: 1;
+  font-family: var(--mantine-font-family-monospace);
+  /* white-space: pre-wrap; */
+}
+
+.readOnlyPreview {
+  font-size: var(--text-fz, var(--mantine-font-size-md));
+  line-height: var(--text-lh, var(--mantine-line-height-md));
+  font-weight: var(--mantine-font-weight-regular);
+  font-family: var(--mantine-font-family-monospace);
+  text-wrap: var(--text-text-wrap, var(--mantine-text-wrap));
+  padding: 0;
+  margin: 0;
+  opacity: 1;
   white-space: pre-wrap;
+}
+
+.codeHighlightButton {
+  width: 18px;
+  height: 18px;
+  color: var(--mantine-color-text);
+  opacity: 0.5;
+}
+
+.codeHighlightButton:hover {
+  color: var(--mantine-color-bright);
+  opacity: 1;
+}
+
+.splitter {
+  width: 100%;
+  flex: 1;
+}
+
+.splitterPane {
+  display: flex;
+  flex-direction: column;
+}
+
+.livePreviewButton {
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
 }
 
 .readOnlyArea {

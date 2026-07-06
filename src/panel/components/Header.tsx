@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Box, Flex, CloseButton } from "@mantine/core";
 import { IconSearch, IconPlus, IconRefresh, IconDatabaseX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -16,7 +17,7 @@ interface HeaderProps {
   isRefreshing: boolean;
 }
 
-export default function Header({ activeSource, onSourceChange, searchQuery, onSearchChange, onAddClick, onRefresh, onClearAll, isRefreshing }: HeaderProps) {
+const Header = memo(function Header({ activeSource, onSourceChange, searchQuery, onSearchChange, onAddClick, onRefresh, onClearAll, isRefreshing }: HeaderProps) {
   return (
     <>
       <Flex className={styles.header}>
@@ -96,4 +97,6 @@ export default function Header({ activeSource, onSourceChange, searchQuery, onSe
       </Flex>
     </>
   );
-}
+});
+
+export default Header;

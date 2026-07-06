@@ -8,6 +8,7 @@ export default {
 
   host_permissions: ["<all_urls>"],
   permissions: ["storage", "cookies"],
+  incognito: "split",
   devtools_page: "src/devtools/devtools.html",
 
   content_scripts: [
