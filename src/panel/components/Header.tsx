@@ -1,11 +1,13 @@
-import { memo } from "react";
-import { Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Box, Flex, CloseButton, Menu } from "@mantine/core";
+import { memo, useState } from "react";
+import { Group, SegmentedControl, TextInput, ActionIcon, Tooltip, Text, Box, Flex, CloseButton, Menu, Divider } from "@mantine/core";
+import { IconSearch, IconPlus, IconRefresh, IconDatabaseX, IconDotsVertical, IconSettings } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconSearch, IconPlus, IconRefresh, IconDatabaseX, IconDotsVertical } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { type StorageSource } from "../services/storage";
 import styles from "../styles/Header.module.css";
+import settingStyles from "../styles/Settings.module.css";
+import Settings from "./Settings";
 
 interface HeaderProps {
   activeSource: StorageSource;
@@ -19,6 +21,7 @@ interface HeaderProps {
 }
 
 const Header = memo(function Header({ activeSource, onSourceChange, searchQuery, onSearchChange, onAddClick, onRefresh, onClearAll, isRefreshing }: HeaderProps) {
+  const [settingsOpened, setSettingsOpened] = useState(false);
   const showLogo = useMediaQuery("(max-width: 750px)");
   const collapseActions = useMediaQuery("(max-width: 550px)");
   return (
@@ -58,7 +61,7 @@ const Header = memo(function Header({ activeSource, onSourceChange, searchQuery,
         {collapseActions ? (
           <Menu shadow="md" width={200} position="bottom-end">
             <Menu.Target>
-              <ActionIcon variant="subtle" color="gray">
+              <ActionIcon>
                 <IconDotsVertical size={16} />
               </ActionIcon>
             </Menu.Target>
@@ -69,6 +72,10 @@ const Header = memo(function Header({ activeSource, onSourceChange, searchQuery,
               <Menu.Item leftSection={<IconRefresh size={16} className={isRefreshing ? styles.spinning : undefined} />} onClick={onRefresh}>
                 Refresh
               </Menu.Item>
+              <Menu.Item leftSection={<IconSettings size={16} />} onClick={() => setSettingsOpened(true)}>
+                Settings
+              </Menu.Item>
+              <Menu.Divider />
               <Menu.Item
                 color="red"
                 leftSection={<IconDatabaseX size={16} />}
@@ -100,53 +107,64 @@ const Header = memo(function Header({ activeSource, onSourceChange, searchQuery,
           </Menu>
         ) : (
           <>
-            <Tooltip label="Add new key">
-              <ActionIcon
-                onClick={() => {
-                  onAddClick();
-                }}
-              >
-                <IconPlus size={16} />
-              </ActionIcon>
-            </Tooltip>
+            <Group gap="xs">
+              <Tooltip label="Add new key">
+                <ActionIcon
+                  onClick={() => {
+                    onAddClick();
+                  }}
+                >
+                  <IconPlus size={16} />
+                </ActionIcon>
+              </Tooltip>
 
-            <Tooltip label="Refresh">
-              <ActionIcon onClick={onRefresh}>
-                <IconRefresh size={16} className={isRefreshing ? styles.spinning : undefined} />
-              </ActionIcon>
-            </Tooltip>
+              <Tooltip label="Refresh">
+                <ActionIcon onClick={onRefresh}>
+                  <IconRefresh size={16} className={isRefreshing ? styles.spinning : undefined} />
+                </ActionIcon>
+              </Tooltip>
 
-            <Tooltip label="Clear all keys">
-              <ActionIcon
-                color="red"
-                className={styles.clearBtn}
-                onClick={() => {
-                  modals.openConfirmModal({
-                    title: "Clear all keys",
-                    centered: true,
-                    children: (
-                      <Text size="sm">
-                        Are you sure you want to delete all keys in <strong>{activeSource}</strong>? This action cannot be undone.
-                      </Text>
-                    ),
-                    labels: { confirm: "Clear keys", cancel: "Cancel" },
-                    confirmProps: { color: "red" },
-                    onConfirm: onClearAll,
-                    onCancel: () => {
-                      notifications.show({
-                        title: "Cancelled",
-                        message: "Clear all keys action was cancelled.",
-                        color: "gray",
-                      });
-                    },
-                  });
-                }}
-              >
-                <IconDatabaseX size={16} />
-              </ActionIcon>
-            </Tooltip>
+              <Tooltip label="Settings">
+                <ActionIcon className={settingStyles.settingsIcon} onClick={() => setSettingsOpened(true)}>
+                  <IconSettings size={16} className={`${settingsOpened ? settingStyles.settingIconSpin : settingStyles.settingIconSpinBackwards}`} />
+                </ActionIcon>
+              </Tooltip>
+
+              <Divider orientation="vertical" />
+
+              <Tooltip label="Clear all keys">
+                <ActionIcon
+                  color="red"
+                  className={styles.clearBtn}
+                  onClick={() => {
+                    modals.openConfirmModal({
+                      title: "Clear all keys",
+                      centered: true,
+                      children: (
+                        <Text size="sm">
+                          Are you sure you want to delete all keys in <strong>{activeSource}</strong>? This action cannot be undone.
+                        </Text>
+                      ),
+                      labels: { confirm: "Clear keys", cancel: "Cancel" },
+                      confirmProps: { color: "red" },
+                      onConfirm: onClearAll,
+                      onCancel: () => {
+                        notifications.show({
+                          title: "Cancelled",
+                          message: "Clear all keys action was cancelled.",
+                          color: "gray",
+                        });
+                      },
+                    });
+                  }}
+                >
+                  <IconDatabaseX size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
           </>
         )}
+        <Settings opened={settingsOpened} onClose={() => setSettingsOpened(false)} />
       </Flex>
     </>
   );

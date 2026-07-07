@@ -1,0 +1,44 @@
+.modalHeader {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  margin-bottom: var(--mantine-spacing-md);
+  padding-bottom: var(--mantine-spacing-xs);
+}
+
+.modalTitle {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-md);
+}
+
+.settingsIcon span {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settingsIcon:hover span {
+  transform: rotate(90deg);
+}
+
+.settingIconSpin {
+  animation: spinCog 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.settingIconSpinBackwards {
+  animation: spinCogBack 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes spinCog {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinCogBack {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}

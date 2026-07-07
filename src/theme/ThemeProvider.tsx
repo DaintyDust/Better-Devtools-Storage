@@ -1,11 +1,12 @@
 import React from "react";
-import { createTheme, MantineProvider, SegmentedControl, Tooltip, ActionIcon, Splitter } from "@mantine/core";
+import { createTheme, MantineProvider, SegmentedControl, Tooltip, ActionIcon, Splitter, Divider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import ActionIconStyles from "./ActionIcon.module.css";
 import SplitterStyles from "./Splitter.module.css";
+import DividerStyles from "./Divider.module.css";
 
 
 const mantineTheme = createTheme({
@@ -30,6 +31,9 @@ const mantineTheme = createTheme({
     }),
     Splitter: Splitter.extend({
       classNames: { handle: SplitterStyles.handle, thumb: SplitterStyles.thumb },
+    }),
+    Divider: Divider.extend({
+      classNames: { root: DividerStyles.root },
     }),
   },
 });

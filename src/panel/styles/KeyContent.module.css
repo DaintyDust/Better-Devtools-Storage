@@ -45,6 +45,9 @@
   height: 100%;
   overflow: hidden;
 }
+:root[data-mantine-color-scheme="light"] .previewPane {
+  background-color: var(--mantine-color-gray-2);
+}
 
 .previewLabel {
   margin-bottom: var(--mantine-spacing-sm);

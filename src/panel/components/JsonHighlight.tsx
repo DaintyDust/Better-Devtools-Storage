@@ -1,5 +1,5 @@
 import { Highlight, themes } from "prism-react-renderer";
-import { ScrollArea } from "@mantine/core";
+import { ScrollArea, useComputedColorScheme, useMantineColorScheme } from "@mantine/core";
 import styles from "../styles/JsonHighlight.module.css";
 
 interface JsonHighlightProps {
@@ -12,8 +12,12 @@ interface JsonHighlightProps {
 }
 
 export default function JsonHighlight({ code, language = "json", lineWrap = true, withLineNumbers = false, opacity = 1, className }: JsonHighlightProps) {
+  const { colorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme();
+  const isDark = colorScheme === "auto" ? computedColorScheme === "dark" : colorScheme === "dark";
+  const prismTheme = isDark ? themes.vsDark : themes.github; //themes.vsLight;
   return (
-    <Highlight theme={themes.vsDark} code={code} language={language}>
+    <Highlight theme={prismTheme} code={code} language={language}>
       {({ style, tokens, getLineProps, getTokenProps }) => (
         <pre
           className={` ${className} ${styles.pre}`}

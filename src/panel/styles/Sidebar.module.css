@@ -18,7 +18,8 @@
   background-color: transparent;
   transition:
     background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    border-left-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .keyItemInner {
@@ -33,6 +34,17 @@
 .keyItem[data-selected="true"] {
   background-color: var(--mantine-color-indigo-8);
   border-left-color: var(--mantine-color-indigo-outline);
+}
+
+/* .keyItem[data-selected="true"] .keyNameText
+, .keyItem:hover .keyNameText
+ {
+  color: var(--mantine-color-dark-0);
+} */
+
+.keyItem[data-selected="true"] .keyNameText,
+.keyItem:hover .keyNameText {
+  color: var(--mantine-color-white) !important;
 }
 
 .keyBadge {
@@ -57,7 +69,8 @@
   opacity: 0.4;
   transition:
     opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateX(8px);
 }
 
@@ -65,6 +78,7 @@
 .keyItem[data-selected="true"] .deleteIcon {
   opacity: 1;
   transform: translateX(0);
+  color: var(--mantine-color-white) !important;
 }
 
 .carouselViewport {

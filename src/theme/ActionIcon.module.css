@@ -1,6 +1,42 @@
 .root:not(:hover) {
   background-color: transparent;
+  color: var(--ai-text-color, var(--ai-color, var(--mantine-color-white)));
 }
-/* .root:hover {
-  background-color: var(--ai-bg-hover, var(--mantine-primary-color-filled));
-} */
+
+/* [data-mantine-color-scheme="light"]  */
+.root[style*="--ai-bg: var(--mantine-color-indigo-filled);"] {
+  color: var(--mantine-color-indigo-filled) !important;
+}
+
+/* [data-mantine-color-scheme="light"]  */
+.root[style*="--ai-bg: var(--mantine-color-indigo-filled);"]:hover {
+  background-color: var(--mantine-color-indigo-light) !important;
+}
+
+/* [data-mantine-color-scheme="light"]  */
+.root[style*="--ai-bg: var(--mantine-color-red-filled);"] {
+  color: var(--mantine-color-red-filled) !important;
+}
+
+/* [data-mantine-color-scheme="light"]  */
+.root[style*="--ai-bg: var(--mantine-color-red-filled);"]:hover {
+  background-color: var(--mantine-color-red-light) !important;
+}
+
+[data-mantine-color-scheme="dark"] .root[style*="--ai-bg: var(--mantine-color-indigo-filled);"] {
+  background-color: transparent !important;
+  color: var(--mantine-color-white) !important;
+}
+
+[data-mantine-color-scheme="dark"] .root[style*="--ai-bg: var(--mantine-color-indigo-filled);"]:hover {
+  background-color: var(--mantine-color-indigo-filled-hover) !important;
+}
+
+[data-mantine-color-scheme="dark"] .root[style*="--ai-bg: var(--mantine-color-red-filled);"] {
+  background-color: transparent !important;
+  color: var(--mantine-color-white) !important;
+}
+
+[data-mantine-color-scheme="dark"] .root[style*="--ai-bg: var(--mantine-color-red-filled);"]:hover {
+  background-color: var(--mantine-color-red-filled-hover) !important;
+}
