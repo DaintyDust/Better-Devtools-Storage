@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { AppShell, Splitter } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
 import { type StorageSource, type KeyType, type StorageKey } from "../services/storage";
@@ -41,6 +42,8 @@ function Panel() {
   const [isLoading, setIsLoading] = useState(false);
   const jsonDebounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const sourceIndex = ["localStorage", "sessionStorage", "cookies"].indexOf(activeSource);
+  const isNarrow = useMediaQuery("(max-width: 500px");
+  const orientation = isNarrow ? "vertical" : "horizontal";
 
   const loadStorage = useCallback(async () => {
     setIsRefreshing(true);
@@ -276,8 +279,8 @@ function Panel() {
         />
       </AppShell.Header>
       <AppShell.Main>
-        <Splitter className={styles.splitter}>
-          <Splitter.Pane className={styles.splitterPane} defaultSize={20} min={15} max={45}>
+        <Splitter className={styles.splitter} orientation={orientation}>
+          <Splitter.Pane className={styles.splitterPane} defaultSize={isNarrow ? 30 : 20} min={15} max={45}>
             <Sidebar
               keys={keys}
               filteredKeys={filteredKeys}
@@ -290,7 +293,7 @@ function Panel() {
               isLoading={isLoading}
             />
           </Splitter.Pane>
-          <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={80} min={55} max={85}>
+          <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={isNarrow ? 70 : 80} min={55} max={85}>
             <KeyContent
               activeSource={activeSource}
               selectedKey={selectedKey}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, TextInput, Text, Badge, ScrollArea, Box, Flex, Button, Center, Textarea, EmptyState, Splitter, Transition, CopyButton, Tooltip, UnstyledButton } from "@mantine/core";
 import { IconEdit, IconTrash, IconDatabase, IconEye, IconCopy, IconCheck, IconTextWrap, IconTextWrapDisabled } from "@tabler/icons-react";
-import { type UseSplitterReturnValue } from "@mantine/hooks";
+import { type UseSplitterReturnValue, useMediaQuery } from "@mantine/hooks";
 import JsonHighlight from "./JsonHighlight";
 import { type StorageSource, type StorageKey } from "../services/storage";
 import styles from "../styles/KeyContent.module.css";
@@ -53,6 +53,8 @@ export default function KeyContent({
   const [lineWrapEnabled, setLineWrapEnabled] = useState(true);
   const splitterSizesRef = useRef<[number, number]>([40, 60]);
   const splitterRef = useRef<UseSplitterReturnValue>(null);
+  const isNarrow = useMediaQuery("(max-width: 650px)");
+  const orientation = isNarrow ? "vertical" : "horizontal";
 
   useEffect(() => {
     if (isEditing && isJson && splitterRef.current) {
@@ -161,6 +163,7 @@ export default function KeyContent({
                   <Splitter
                     className={styles.splitter}
                     splitterRef={splitterRef}
+                    orientation={orientation}
                     onSizeChange={(sizes) => {
                       splitterSizesRef.current = [sizes[0] as number, sizes[1] as number];
                       setPreviewCollapsed(sizes[0] === 0);

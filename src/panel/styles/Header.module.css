@@ -19,13 +19,15 @@
   flex: 1;
 }
 
-.searchInput {
-  width: 200px;
-  transition: width 150ms ease;
+.searchRoot {
+  flex: 1;
+  min-width: 120px;
+  max-width: 240px;
 }
 
-.searchInput:focus {
-  width: 240px !important;
+.searchInput {
+  width: 100%;
+  transition: width 150ms ease;
 }
 
 .clearBtn:hover {
