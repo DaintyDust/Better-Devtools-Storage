@@ -17,4 +17,11 @@ export default defineConfig({
       "@theme": fileURLToPath(new URL("./src/theme", import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        panel: fileURLToPath(new URL("./src/panel/panel.html", import.meta.url)),
+      },
+    },
+  },
 });

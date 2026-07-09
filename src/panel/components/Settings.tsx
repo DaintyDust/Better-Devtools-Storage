@@ -84,7 +84,7 @@ export default function Settings({ opened, onClose }: SettingsProps) {
             fullWidth
             styles={{ inner: { justifyContent: "flex-start" } }}
           >
-            Github
+            Github Source
           </Button>
           <Button component="a" href="https://www.buymeacoffee.com/daintydust" target="_blank" size="sm" leftSection={<IconCoffee size={16} />} fullWidth styles={{ inner: { justifyContent: "flex-start" } }}>
             Buy me a coffee
