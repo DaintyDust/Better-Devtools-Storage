@@ -1,5 +1,6 @@
 {
-  "name": "Better-Devtools-Storage",
+  "name": "Better Devtools Storage",
+  "description": "a DevTools tab to view and edit localStorage, sessionStorage, and cookies in a more user friendly way.",
   "private": true,
   "version": "1.0.1",
   "type": "module",

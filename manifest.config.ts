@@ -3,9 +3,9 @@ import packageJson from "./package.json";
 
 export default {
   manifest_version: 3,
-  name: "Better-Devtools-Storage",
+  name: packageJson.name,
   version: packageJson.version,
-  description: "A powerful DevTools panel for inspecting and editing localStorage, sessionStorage, and chrome.storage.local.",
+  description: packageJson.description,
 
   host_permissions: ["<all_urls>"],
   permissions: ["storage", "cookies"],
