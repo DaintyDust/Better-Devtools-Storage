@@ -1,9 +1,10 @@
 import type { ManifestV3Export } from "@crxjs/vite-plugin";
+import packageJson from "./package.json";
 
 export default {
   manifest_version: 3,
   name: "Better-Devtools-Storage",
-  version: "1.0.0",
+  version: packageJson.version,
   description: "A powerful DevTools panel for inspecting and editing localStorage, sessionStorage, and chrome.storage.local.",
 
   host_permissions: ["<all_urls>"],

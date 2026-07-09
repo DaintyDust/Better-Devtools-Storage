@@ -1,11 +1,12 @@
 {
   "name": "Better-Devtools-Storage",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "package": "npm run build && powershell -Command \"$v = (Get-Content package.json | ConvertFrom-Json).version;Compress-Archive -Path dist/* -DestinationPath Better-Devtools-Storage-$v.zip -Force\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
