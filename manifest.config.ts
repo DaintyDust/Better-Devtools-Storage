@@ -3,7 +3,7 @@ import type { ManifestV3Export } from "@crxjs/vite-plugin";
 export default {
   manifest_version: 3,
   name: "Better-Devtools-Storage",
-  version: "0.0.1",
+  version: "1.0.0",
   description: "A powerful DevTools panel for inspecting and editing localStorage, sessionStorage, and chrome.storage.local.",
 
   host_permissions: ["<all_urls>"],
@@ -20,8 +20,8 @@ export default {
   ],
 
   icons: {
-    16: "icons/icon16.png",
-    48: "icons/icon48.png",
-    128: "icons/icon128.png",
+    16: "icons/Better-Storage-Icon.png",
+    48: "icons/Better-Storage-Icon.png",
+    128: "icons/Better-Storage-Icon.png",
   },
 } satisfies ManifestV3Export;

@@ -16,3 +16,17 @@
   display: flex;
   flex-direction: column;
 }
+
+.emptyStateContainer {
+  height: 100%;
+  flex: 1;
+  padding: var(--mantine-spacing-xl);
+}
+
+.emptyStateIcon {
+  opacity: 0.3;
+}
+
+.emptyStateDescription {
+  max-width: 240px;
+}

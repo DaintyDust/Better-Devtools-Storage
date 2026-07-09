@@ -29,7 +29,7 @@ const Header = memo(function Header({ activeSource, onSourceChange, searchQuery,
       <Flex className={styles.header} style={{ gap: collapseActions ? "5px" : undefined, padding: collapseActions ? "0 5px" : undefined }}>
         {!showLogo && (
           <Group className={styles.logoGroup}>
-            <img src="/icons/icon16.png" alt="Better Devtools Storage Logo" width={16} height={16} />
+            <img src="/icons/Better-Storage-Icon.png" alt="Better Devtools Storage Logo" width={16} height={16} />
             <Text fw={700} size="sm" c="indigo" className={styles.logoText}>
               Better Devtools Storage
             </Text>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { AppShell, Splitter } from "@mantine/core";
+import { AppShell, Button, Center, EmptyState, Splitter } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { fetchStorage, deleteStorageKey, clearStorage, saveStorageKey } from "../services/storage";
@@ -8,6 +8,7 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import KeyContent from "./KeyContent";
 import styles from "../styles/Panel.module.css";
+import { IconRefresh } from "@tabler/icons-react";
 
 function detectType(value: string): KeyType {
   if (value === "true" || value === "false") return "boolean";
@@ -40,12 +41,14 @@ function Panel() {
   const [lastValidJson, setLastValidJson] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState(false); // CHANGE TO FALSE
   const jsonDebounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const sourceIndex = ["localStorage", "sessionStorage", "cookies"].indexOf(activeSource);
-  const isNarrow = useMediaQuery("(max-width: 500px");
+  const isNarrow = useMediaQuery("(max-width: 500px)");
   const orientation = isNarrow ? "vertical" : "horizontal";
 
   const loadStorage = useCallback(async () => {
+    setConnectionError(false);
     setIsRefreshing(true);
     setIsLoading(true);
     try {
@@ -66,6 +69,11 @@ function Panel() {
     } catch (err) {
       console.error(err);
       setStorage({});
+
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes("Could not establish connection") || errMsg.includes("Receiving end does not exist")) {
+        setConnectionError(true);
+      }
     } finally {
       setIsLoading(false);
       setTimeout(() => {
@@ -77,6 +85,17 @@ function Panel() {
   useEffect(() => {
     // eslint-disable-next-line
     loadStorage();
+  }, [loadStorage]);
+
+  useEffect(() => {
+    const handleNavigated = () => {
+      loadStorage();
+    };
+
+    chrome.devtools.network.onNavigated.addListener(handleNavigated);
+    return () => {
+      chrome.devtools.network.onNavigated.removeListener(handleNavigated);
+    };
   }, [loadStorage]);
 
   useEffect(() => {
@@ -278,45 +297,65 @@ function Panel() {
           isRefreshing={isRefreshing}
         />
       </AppShell.Header>
-      <AppShell.Main>
-        <Splitter className={styles.splitter} orientation={orientation}>
-          <Splitter.Pane className={styles.splitterPane} defaultSize={isNarrow ? 30 : 20} min={15} max={45}>
-            <Sidebar
-              keys={keys}
-              filteredKeys={filteredKeys}
-              selectedKey={selectedKey}
-              onSelectKey={handleSelectKey}
-              onDeleteKey={handleDelete}
-              onClearSearch={handleClearSearch}
-              sourceIndex={sourceIndex}
-              activeSource={activeSource}
-              isLoading={isLoading}
-            />
-          </Splitter.Pane>
-          <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={isNarrow ? 70 : 80} min={55} max={85}>
-            <KeyContent
-              activeSource={activeSource}
-              selectedKey={selectedKey}
-              storage={storage}
-              isEditing={isEditing}
-              onSetEditing={setIsEditing}
-              editValue={editValue}
-              onEditValueChange={setEditValue}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              isAddingMode={isAddingMode}
-              onSetAddingMode={setIsAddingMode}
-              newKeyName={newKeyName}
-              onNewKeyNameChange={setNewKeyName}
-              newValue={newValue}
-              onNewValueChange={setNewValue}
-              onAddKey={handleAddKey}
-              isJson={isJson}
-              lastValidJson={lastValidJson}
-              isLoading={isLoading}
-            />
-          </Splitter.Pane>
-        </Splitter>
+      <AppShell.Main className={styles.mainArea}>
+        {connectionError ? (
+          <Center className={styles.emptyStateContainer}>
+            <EmptyState size="md" icon={<IconRefresh size={48} stroke={1.2} className={styles.emptyStateIcon} />} title="Connection Error" align="center" withIndicatorBackground={false}>
+              <EmptyState.Description className={styles.emptyStateDescription}>
+                The extension could not establish a connection. This usally happens if the page was loaded before the extension was installed.
+              </EmptyState.Description>
+              <EmptyState.Actions>
+                <Button
+                  size="xs"
+                  onClick={() => {
+                    chrome.devtools.inspectedWindow.reload();
+                  }}
+                >
+                  Reload Page
+                </Button>
+              </EmptyState.Actions>
+            </EmptyState>
+          </Center>
+        ) : (
+          <Splitter className={styles.splitter} orientation={orientation}>
+            <Splitter.Pane className={styles.splitterPane} defaultSize={isNarrow ? 30 : 20} min={15} max={45}>
+              <Sidebar
+                keys={keys}
+                filteredKeys={filteredKeys}
+                selectedKey={selectedKey}
+                onSelectKey={handleSelectKey}
+                onDeleteKey={handleDelete}
+                onClearSearch={handleClearSearch}
+                sourceIndex={sourceIndex}
+                activeSource={activeSource}
+                isLoading={isLoading}
+              />
+            </Splitter.Pane>
+            <Splitter.Pane className={`${styles.mainArea} ${styles.splitterPane}`} defaultSize={isNarrow ? 70 : 80} min={55} max={85}>
+              <KeyContent
+                activeSource={activeSource}
+                selectedKey={selectedKey}
+                storage={storage}
+                isEditing={isEditing}
+                onSetEditing={setIsEditing}
+                editValue={editValue}
+                onEditValueChange={setEditValue}
+                onSave={handleSave}
+                onDelete={handleDelete}
+                isAddingMode={isAddingMode}
+                onSetAddingMode={setIsAddingMode}
+                newKeyName={newKeyName}
+                onNewKeyNameChange={setNewKeyName}
+                newValue={newValue}
+                onNewValueChange={setNewValue}
+                onAddKey={handleAddKey}
+                isJson={isJson}
+                lastValidJson={lastValidJson}
+                isLoading={isLoading}
+              />
+            </Splitter.Pane>
+          </Splitter>
+        )}
       </AppShell.Main>
     </AppShell>
   );
