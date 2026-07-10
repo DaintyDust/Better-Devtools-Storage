@@ -8,7 +8,7 @@ export default {
   description: packageJson.description,
 
   host_permissions: ["<all_urls>"],
-  permissions: ["storage", "cookies"],
+  permissions: ["cookies"],
   incognito: "split",
   devtools_page: "src/devtools/devtools.html",
 
